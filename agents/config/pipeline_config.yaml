@@ -1,0 +1,119 @@
+# 代理管道配置
+
+# 管道定义
+pipelines:
+  contract_review:
+    name: "合同审查管道"
+    description: "处理合同文件并生成审查报告的完整流程"
+    agents:
+      - contract_analyst
+      - legal_counsel
+      - risk_analyst
+      - report_generator
+    timeout: 1800  # 30分钟超时
+
+# 代理配置
+agents:
+  contract_analyst:
+    type: "ContractAnalystAgent"
+    priority: 1
+    timeout: 300
+    concurrent_tasks: 2
+    dependencies: []
+  
+  legal_counsel:
+    type: "LegalCounselAgent"
+    priority: 2
+    timeout: 600
+    concurrent_tasks: 1
+    dependencies: ["contract_analyst"]
+  
+  risk_analyst:
+    type: "RiskAnalystAgent"
+    priority: 2
+    timeout: 300
+    concurrent_tasks: 1
+    dependencies: ["contract_analyst"]
+  
+  report_generator:
+    type: "ReportGeneratorAgent"
+    priority: 3
+    timeout: 300
+    concurrent_tasks: 1
+    dependencies: ["legal_counsel", "risk_analyst"]
+
+# 队列配置
+queues:
+  contract_analysis:
+    name: "contract_analysis_queue"
+    durable: true
+    max_priority: 10
+  
+  legal_review:
+    name: "legal_review_queue"
+    durable: true
+    max_priority: 10
+  
+  risk_analysis:
+    name: "risk_analysis_queue"
+    durable: true
+    max_priority: 10
+  
+  report_generation:
+    name: "report_generation_queue"
+    durable: true
+    max_priority: 10
+
+# 交换机配置
+exchanges:
+  contract_review:
+    name: "contract_review_exchange"
+    type: "direct"
+    durable: true
+
+# 路由配置
+routing:
+  contract_analysis:
+    key: "contract.analysis"
+    exchange: "contract_review_exchange"
+    queue: "contract_analysis_queue"
+  
+  legal_review:
+    key: "legal.review"
+    exchange: "contract_review_exchange"
+    queue: "legal_review_queue"
+  
+  risk_analysis:
+    key: "risk.analysis"
+    exchange: "contract_review_exchange"
+    queue: "risk_analysis_queue"
+  
+  report_generation:
+    key: "report.generation"
+    exchange: "contract_review_exchange"
+    queue: "report_generation_queue"
+
+# 消息配置
+message:
+  persistence: true
+  priority_levels:
+    high: 8
+    medium: 5
+    low: 2
+  expiration: 3600  # 1小时过期
+
+# 性能配置
+performance:
+  prefetch_count: 1
+  consumer_threads: 2
+  producer_pool_size: 5
+
+# 监控配置
+monitoring:
+  enable_metrics: true
+  collect_interval: 60
+  metrics:
+    - queue_length
+    - processing_time
+    - error_rate
+    - throughput

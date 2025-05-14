@@ -1,0 +1,65 @@
+# 错误处理配置
+
+# 重试策略
+retry:
+  max_attempts: 3  # 最大重试次数
+  initial_delay: 1  # 初始延迟（秒）
+  max_delay: 30    # 最大延迟（秒）
+  backoff_factor: 2 # 退避因子
+
+# 死信处理
+dead_letter:
+  queue: "dead_letter_queue"  # 死信队列名称
+  exchange: "dead_letter_exchange"  # 死信交换机
+  routing_key: "dead_letter"  # 路由键
+  ttl: 86400  # 消息存活时间（秒）
+
+# 人工干预
+human_intervention:
+  enabled: true  # 是否启用人工干预
+  notification:
+    email: true  # 是否发送邮件通知
+    slack: false # 是否发送Slack通知
+  threshold:
+    error_count: 3  # 触发人工干预的错误次数阈值
+    error_rate: 0.1 # 触发人工干预的错误率阈值
+
+# 错误类型及处理策略
+error_types:
+  validation_error:
+    retry: true
+    max_retries: 2
+    alert: false
+  
+  connection_error:
+    retry: true
+    max_retries: 3
+    alert: true
+  
+  processing_error:
+    retry: true
+    max_retries: 2
+    alert: true
+  
+  system_error:
+    retry: false
+    alert: true
+    require_intervention: true
+
+# 监控和报警
+monitoring:
+  error_rate_window: 300  # 错误率计算窗口（秒）
+  alert_threshold:
+    error_rate: 0.05      # 错误率阈值
+    response_time: 10     # 响应时间阈值（秒）
+  
+  metrics:
+    collect_interval: 60  # 指标收集间隔（秒）
+    retention_period: 7   # 指标保留天数
+
+# 日志级别
+logging:
+  error_handler: "INFO"
+  retry_handler: "DEBUG"
+  dead_letter_handler: "INFO"
+  human_intervention: "INFO"
